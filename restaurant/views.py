@@ -1,3 +1,113 @@
-from django.shortcuts import render
+from typing import Type
 
-# Create your views here.
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.mixins import (
+    ListModelMixin,
+    RetrieveModelMixin,
+    CreateModelMixin,
+    DestroyModelMixin
+)
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+
+from rest_framework.serializers import ModelSerializer
+from rest_framework.viewsets import GenericViewSet
+
+from permissions import IsAdminOrIfAuthenticatedReadOnly
+from restaurant.models import (
+    Restaurant,
+    DishType,
+    Dish, Menu,
+)
+from restaurant.serializers import (
+    RestaurantSerializer,
+    DishTypeSerializer, DishSerializer, DishListSerializer, DishDetailSerializer, MenuSerializer, MenuListSerializer,
+)
+
+
+class RestaurantViewSet(CreateModelMixin,
+                        ListModelMixin,
+                        RetrieveModelMixin,
+                        DestroyModelMixin,
+                        GenericViewSet):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+
+
+class DishTypeViewSet(CreateModelMixin,
+                      ListModelMixin,
+                      DestroyModelMixin,
+                      GenericViewSet):
+    queryset = DishType.objects.all()
+    serializer_class = DishTypeSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+
+
+class DishViewSet(CreateModelMixin,
+                  ListModelMixin,
+                  RetrieveModelMixin,
+                  DestroyModelMixin,
+                  GenericViewSet):
+    queryset = Dish.objects.select_related("dish_type")
+    serializer_class = DishSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+
+    def get_serializer_class(self) -> Type[ModelSerializer]:
+        if self.action == "list":
+            return DishListSerializer
+        if self.action == "retrieve":
+            return DishDetailSerializer
+        return DishSerializer
+
+
+class MenuViewSet(CreateModelMixin,
+                  ListModelMixin,
+                  DestroyModelMixin,
+                  GenericViewSet):
+    queryset = Menu.objects.select_related(
+        "restaurant"
+    ).prefetch_related("dishes")
+    serializer_class = MenuSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+
+    def get_serializer_class(self) -> Type[ModelSerializer]:
+        if self.action == "list":
+            return MenuListSerializer
+
+        return MenuSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        instance = serializer.instance
+
+        response_data = {
+            "title": instance.title,
+            "restaurant": instance.restaurant.name,
+            "day": instance.day,
+            "dishes": [dish.name for dish in instance.dishes.all()]
+        }
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="today-menu",
+    )
+    def today_menu(self, request) -> Response:
+        today = timezone.now().date()
+
+        menus = Menu.objects.filter(day=today)
+
+        serializer = self.get_serializer(menus, many=True)
+
+        return Response(serializer.data)
+
+
