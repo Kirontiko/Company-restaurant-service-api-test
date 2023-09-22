@@ -6,4 +6,5 @@ pytz==2023.3.post1
 sqlparse==0.4.4
 PyJWT==2.8.0
 flake8==6.1.0
-
+python-dotenv==1.0.0
+djangorestframework-simplejwt==5.0.0
