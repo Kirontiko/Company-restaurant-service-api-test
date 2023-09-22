@@ -72,12 +72,6 @@ class DishDetailSerializer(DishSerializer):
 
 
 class MenuSerializer(serializers.ModelSerializer):
-    def validate(self, attrs) -> None:
-        data = super(MenuSerializer, self).validate(attrs=attrs)
-        day = timezone.now().date()
-        Menu.validate_day(day, ValidationError)
-        return data
-
     class Meta:
         model = Menu
         fields = (
@@ -87,6 +81,12 @@ class MenuSerializer(serializers.ModelSerializer):
             "day",
             "dishes"
         )
+
+    def validate(self, attrs) -> None:
+        data = super(MenuSerializer, self).validate(attrs=attrs)
+        day = timezone.now().date()
+        Menu.validate_day(day, data["restaurant"], ValidationError)
+        return data
 
 
 class MenuListSerializer(MenuSerializer):

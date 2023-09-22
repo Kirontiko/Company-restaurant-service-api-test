@@ -1,5 +1,6 @@
 from typing import Type
 
+from django.db.models import QuerySet
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -25,6 +26,8 @@ from restaurant.serializers import (
     RestaurantSerializer,
     DishTypeSerializer, DishSerializer, DishListSerializer, DishDetailSerializer, MenuSerializer, MenuListSerializer,
 )
+from vote.models import Vote
+from vote.serializers import VoteSerializer
 
 
 class RestaurantViewSet(CreateModelMixin,
@@ -67,10 +70,13 @@ class MenuViewSet(CreateModelMixin,
                   ListModelMixin,
                   DestroyModelMixin,
                   GenericViewSet):
-    queryset = Menu.objects.select_related(
+    serializer_class = MenuSerializer
+    today = timezone.now().date()
+    queryset = Menu.objects.filter(
+        day=today
+    ).select_related(
         "restaurant"
     ).prefetch_related("dishes")
-    serializer_class = MenuSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
 
     def get_serializer_class(self) -> Type[ModelSerializer]:
@@ -99,15 +105,32 @@ class MenuViewSet(CreateModelMixin,
     @action(
         methods=["GET"],
         detail=False,
-        url_path="today-menu",
+        url_path="menu-history",
     )
-    def today_menu(self, request) -> Response:
-        today = timezone.now().date()
-
-        menus = Menu.objects.filter(day=today)
-
+    def menu_history(self, request) -> Response:
+        menus = Menu.objects.select_related(
+            "restaurant"
+        ).prefetch_related("dishes")
         serializer = self.get_serializer(menus, many=True)
-
         return Response(serializer.data)
 
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="vote",
+    )
+    def vote(self, request, pk=None) -> Response:
+        menu = self.get_object()
+        user = request.user
 
+        serializer = VoteSerializer(data={"menu": menu.id, "user": user.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_data = {
+            "message": "Your vote was successfully added!",
+            "menu": menu.title,
+            "restaurant": menu.restaurant.name,
+        }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)

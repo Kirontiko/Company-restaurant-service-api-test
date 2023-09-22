@@ -35,9 +35,9 @@ class Menu(models.Model):
     day = models.DateField(auto_now_add=True)
     dishes = models.ManyToManyField(Dish, related_name="menus")
 
-    @classmethod
-    def validate_day(cls, day, error_to_raise) -> None:
-        if cls.objects.filter(day=day).exists():
+    @staticmethod
+    def validate_day(day, restaurant, error_to_raise) -> None:
+        if Menu.objects.filter(day=day).filter(restaurant=restaurant).exists():
             raise error_to_raise(
                 {
                     "day":
@@ -46,7 +46,7 @@ class Menu(models.Model):
             )
 
     def clean(self) -> None:
-        Menu.validate_day(self.day, ValidationError)
+        Menu.validate_day(self.day, self.restaurant, ValidationError)
 
     def save(
         self,
