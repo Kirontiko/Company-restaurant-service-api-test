@@ -8,7 +8,7 @@ from rest_framework.mixins import (
     ListModelMixin,
     RetrieveModelMixin,
     CreateModelMixin,
-    DestroyModelMixin
+    DestroyModelMixin,
 )
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -20,43 +20,52 @@ from permissions import IsAdminOrIfAuthenticatedReadOnly
 from restaurant.models import (
     Restaurant,
     DishType,
-    Dish, Menu,
+    Dish,
+    Menu,
 )
 from restaurant.serializers import (
     RestaurantSerializer,
-    DishTypeSerializer, DishSerializer, DishListSerializer, DishDetailSerializer, MenuSerializer, MenuListSerializer,
+    DishTypeSerializer,
+    DishSerializer,
+    DishListSerializer,
+    DishDetailSerializer,
+    MenuSerializer,
+    MenuListSerializer,
 )
 from vote.models import Vote
 from vote.serializers import VoteSerializer
 
 
-class RestaurantViewSet(CreateModelMixin,
-                        ListModelMixin,
-                        RetrieveModelMixin,
-                        DestroyModelMixin,
-                        GenericViewSet):
+class RestaurantViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class DishTypeViewSet(CreateModelMixin,
-                      ListModelMixin,
-                      DestroyModelMixin,
-                      GenericViewSet):
+class DishTypeViewSet(
+    CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericViewSet
+):
     queryset = DishType.objects.all()
     serializer_class = DishTypeSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class DishViewSet(CreateModelMixin,
-                  ListModelMixin,
-                  RetrieveModelMixin,
-                  DestroyModelMixin,
-                  GenericViewSet):
+class DishViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
     queryset = Dish.objects.select_related("dish_type")
     serializer_class = DishSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_serializer_class(self) -> Type[ModelSerializer]:
         if self.action == "list":
@@ -66,18 +75,17 @@ class DishViewSet(CreateModelMixin,
         return DishSerializer
 
 
-class MenuViewSet(CreateModelMixin,
-                  ListModelMixin,
-                  DestroyModelMixin,
-                  GenericViewSet):
+class MenuViewSet(
+    CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericViewSet
+):
     serializer_class = MenuSerializer
     today = timezone.now().date()
-    queryset = Menu.objects.filter(
-        day=today
-    ).select_related(
-        "restaurant"
-    ).prefetch_related("dishes")
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+    queryset = (
+        Menu.objects.filter(day=today)
+        .select_related("restaurant")
+        .prefetch_related("dishes")
+    )
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_serializer_class(self) -> Type[ModelSerializer]:
         if self.action == "list":
@@ -96,11 +104,13 @@ class MenuViewSet(CreateModelMixin,
             "title": instance.title,
             "restaurant": instance.restaurant.name,
             "day": instance.day,
-            "dishes": [dish.name for dish in instance.dishes.all()]
+            "dishes": [dish.name for dish in instance.dishes.all()],
         }
 
         headers = self.get_success_headers(serializer.data)
-        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            response_data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     @action(
         methods=["GET"],
@@ -108,9 +118,9 @@ class MenuViewSet(CreateModelMixin,
         url_path="menu-history",
     )
     def menu_history(self, request) -> Response:
-        menus = Menu.objects.select_related(
-            "restaurant"
-        ).prefetch_related("dishes")
+        menus = Menu.objects.select_related("restaurant").prefetch_related(
+            "dishes"
+        )
         serializer = self.get_serializer(menus, many=True)
         return Response(serializer.data)
 

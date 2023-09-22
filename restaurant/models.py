@@ -11,9 +11,9 @@ class DishType(models.Model):
 
 class Dish(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    dish_type = models.ForeignKey(DishType,
-                                  on_delete=models.CASCADE,
-                                  related_name="dishes")
+    dish_type = models.ForeignKey(
+        DishType, on_delete=models.CASCADE, related_name="dishes"
+    )
     description = models.TextField(null=True, blank=True)
 
     def __str__(self) -> str:
@@ -29,9 +29,9 @@ class Restaurant(models.Model):
 
 class Menu(models.Model):
     title = models.CharField(max_length=255)
-    restaurant = models.ForeignKey(Restaurant,
-                                   on_delete=models.CASCADE,
-                                   related_name="menus")
+    restaurant = models.ForeignKey(
+        Restaurant, on_delete=models.CASCADE, related_name="menus"
+    )
     day = models.DateField(auto_now_add=True)
     dishes = models.ManyToManyField(Dish, related_name="menus")
 
@@ -39,10 +39,7 @@ class Menu(models.Model):
     def validate_day(day, restaurant, error_to_raise) -> None:
         if Menu.objects.filter(day=day).filter(restaurant=restaurant).exists():
             raise error_to_raise(
-                {
-                    "day":
-                        "You`ve already upload menu today! Try again tomorrow"
-                }
+                {"day": "You`ve already upload menu today! Try again tomorrow"}
             )
 
     def clean(self) -> None:
@@ -57,10 +54,7 @@ class Menu(models.Model):
     ) -> None:
         self.full_clean()
         return super(Menu, self).save(
-            force_insert,
-            force_update,
-            using,
-            update_fields
+            force_insert, force_update, using, update_fields
         )
 
     def __str__(self) -> str:

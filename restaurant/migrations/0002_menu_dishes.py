@@ -12,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="menu",
             name="dishes",
-            field=models.ManyToManyField(related_name="menus", to="restaurant.dish"),
+            field=models.ManyToManyField(
+                related_name="menus", to="restaurant.dish"
+            ),
         ),
     ]

@@ -13,19 +13,13 @@ from restaurant.models import (
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
-        fields = (
-            "id",
-            "name"
-        )
+        fields = ("id", "name")
 
 
 class DishTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DishType
-        fields = (
-            "id",
-            "name"
-        )
+        fields = ("id", "name")
 
 
 class DishSerializer(serializers.ModelSerializer):
@@ -41,18 +35,12 @@ class DishSerializer(serializers.ModelSerializer):
 
 class DishListSerializer(DishSerializer):
     dish_type_name = serializers.CharField(
-        source="dish_type.name",
-        read_only=True
+        source="dish_type.name", read_only=True
     )
 
     class Meta:
         model = Dish
-        fields = (
-            "id",
-            "name",
-            "dish_type_name",
-            "description"
-        )
+        fields = ("id", "name", "dish_type_name", "description")
 
 
 class DishDetailSerializer(DishSerializer):
@@ -74,13 +62,7 @@ class DishDetailSerializer(DishSerializer):
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
-        fields = (
-            "id",
-            "title",
-            "restaurant",
-            "day",
-            "dishes"
-        )
+        fields = ("id", "title", "restaurant", "day", "dishes")
 
     def validate(self, attrs) -> None:
         data = super(MenuSerializer, self).validate(attrs=attrs)
@@ -91,21 +73,12 @@ class MenuSerializer(serializers.ModelSerializer):
 
 class MenuListSerializer(MenuSerializer):
     restaurant_name = serializers.CharField(
-        source="restaurant.name",
-        read_only=True
+        source="restaurant.name", read_only=True
     )
     dishes = serializers.SlugRelatedField(
-        many=True,
-        slug_field="name",
-        read_only=True
+        many=True, slug_field="name", read_only=True
     )
 
     class Meta:
         model = Menu
-        fields = (
-            "id",
-            "title",
-            "restaurant_name",
-            "day",
-            "dishes"
-        )
+        fields = ("id", "title", "restaurant_name", "day", "dishes")
