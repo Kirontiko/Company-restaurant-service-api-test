@@ -1,6 +1,5 @@
 from typing import Type
 
-from django.db.models import QuerySet
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -10,7 +9,6 @@ from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
 )
-from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from rest_framework.serializers import ModelSerializer
@@ -32,7 +30,6 @@ from restaurant.serializers import (
     MenuSerializer,
     MenuListSerializer,
 )
-from vote.models import Vote
 from vote.serializers import VoteSerializer
 
 
