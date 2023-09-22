@@ -1,12 +1,15 @@
+import os
 from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = (
-    "django-insecure-8sh=1q&f2qzu+jzxffjrbl3m7gdr(1kkzjfrtn6z)ny_gk_!jz"
-)
+load_dotenv()
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
@@ -58,10 +61,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "noikoxch",
-        "USER": "noikoxch",
-        "PASSWORD": "4s4geACQZKQ7Nt2xacAQ6CYB32L11gfi",
-        "HOST": "snuffleupagus.db.elephantsql.com",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST"),
         "PORT": "5432",
     }
 }
@@ -102,8 +105,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=50000),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=50),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=5),
     "ROTATE_REFRESH_TOKENS": False,
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZE",
 }
